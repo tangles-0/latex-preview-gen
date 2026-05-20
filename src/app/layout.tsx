@@ -1,23 +1,18 @@
 import "./globals.css";
 
+import type { ReactNode } from "react";
+
 export const metadata = {
-  title: "latex",
-  description: "Upload images, organize albums, and share direct links.",
+  title: "Latex preview generator",
+  description: "Standalone thumbnail generation API service for Latex.",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-
+const RootLayout = ({ children }: { children: ReactNode }) => {
   return (
-    <html lang="en"  suppressHydrationWarning={true}>
-
-      <body className="min-h-screen bg-white text-neutral-900">
-        {children}
-      </body>
+    <html lang="en" suppressHydrationWarning={true}>
+      <body className="min-h-screen bg-white text-neutral-900">{children}</body>
     </html>
   );
-}
+};
 
+export default RootLayout;

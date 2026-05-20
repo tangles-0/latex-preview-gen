@@ -23,7 +23,9 @@ function resolveDatabaseUrl(): string {
     return appendSslMode(process.env.DATABASE_URL, sslMode);
   }
 
-  throw new Error("DATABASE_URL or PGHOST/PGDATABASE/PGUSER/PGPASSWORD must be set for drizzle-kit.");
+  throw new Error(
+    "DATABASE_URL or PGHOST/PGDATABASE/PGUSER/PGPASSWORD must be set for drizzle-kit.",
+  );
 }
 
 function appendSslMode(url: string, sslMode: string | undefined): string {
