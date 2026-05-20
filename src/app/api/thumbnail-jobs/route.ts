@@ -34,6 +34,7 @@ export const POST = async (request: Request) => {
     const payload = thumbnailJobPayloadSchema.parse(await request.json());
 
     if (!getThumbnailGenerator(payload)) {
+      console.error("Unsupported media type", payload);
       return NextResponse.json(
         {
           error: "Unsupported media type",

@@ -1,8 +1,12 @@
-import { dummyThumbnailGenerator } from "@/lib/preview/dummyThumbnailGenerator";
+import { documentThumbnailGenerator } from "@/lib/preview/documentThumbnailGenerator";
+import { imageThumbnailGenerator } from "@/lib/preview/imageThumbnailGenerator";
+import { videoThumbnailGenerator } from "@/lib/preview/videoThumbnailGenerator";
 import type { ThumbnailGenerator } from "@/lib/preview/types";
 
 const thumbnailGenerators: readonly ThumbnailGenerator[] = [
-  dummyThumbnailGenerator,
+  imageThumbnailGenerator,
+  videoThumbnailGenerator,
+  documentThumbnailGenerator,
 ];
 
 const normalize = (value: string) => value.trim().toLowerCase();
