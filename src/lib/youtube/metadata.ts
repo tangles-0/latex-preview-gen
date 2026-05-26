@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import { writeFile } from "node:fs/promises";
 
-import { getYtdlpBinary } from "@/lib/env";
+import { getYtdlpBinary, getYtdlpCookiesPath } from "@/lib/env";
 import { formatError } from "@/lib/errors";
 import { getExtensionForFile } from "@/lib/preview/paths";
 import { getYoutubeThumbnailFilePath } from "@/lib/youtube/paths";
@@ -56,7 +56,13 @@ const runYtdlpJson = (url: string) =>
   new Promise<YtdlpMetadata>((resolve, reject) => {
     const child = spawn(
       getYtdlpBinary(),
-      ["--dump-single-json", "--no-playlist", url],
+      [
+        "--cookies",
+        getYtdlpCookiesPath(),
+        "--dump-single-json",
+        "--no-playlist",
+        url,
+      ],
       {
         stdio: ["ignore", "pipe", "pipe"],
       },

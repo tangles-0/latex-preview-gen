@@ -26,6 +26,9 @@ export const getYtdlpBinaryDirectory = () =>
 export const getYtdlpBinary = () =>
   path.resolve(getYtdlpBinaryDirectory(), getYtdlpBinaryName());
 
+export const getYtdlpCookiesPath = () =>
+  process.env.YT_DLP_COOKIES_PATH?.trim() || "cookies.txt";
+
 export const getIncomingApiSecret = () =>
   process.env.LATEX_INCOMING_API_SECRET_KEY?.trim() ?? "";
 

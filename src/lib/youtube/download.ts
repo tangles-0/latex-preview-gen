@@ -2,7 +2,11 @@ import { spawn } from "node:child_process";
 import { readdir, stat } from "node:fs/promises";
 import path from "node:path";
 
-import { getYoutubeDownloadPath, getYtdlpBinary } from "@/lib/env";
+import {
+  getYoutubeDownloadPath,
+  getYtdlpBinary,
+  getYtdlpCookiesPath,
+} from "@/lib/env";
 import { formatError } from "@/lib/errors";
 import { getYoutubeDownloadOutputTemplate } from "@/lib/youtube/paths";
 
@@ -78,6 +82,8 @@ export const downloadYoutubeVideo = async ({
       .then((outputTemplate) => {
         const binary = getYtdlpBinary();
         const args = [
+          "--cookies",
+          getYtdlpCookiesPath(),
           "--no-playlist",
           "--newline",
           "--progress-template",
