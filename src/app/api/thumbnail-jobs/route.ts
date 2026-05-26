@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
-import { getIncomingApiSecret } from "@/lib/env";
+import { isAuthorizedIncomingRequest } from "@/lib/auth";
 import { createOrResetPendingJob } from "@/lib/jobs/repository";
 import { processGenerationJob } from "@/lib/jobs/processor";
 import { thumbnailJobPayloadSchema } from "@/lib/jobs/types";
@@ -13,20 +13,8 @@ import {
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const isAuthorized = (authorizationHeader: string | null) => {
-  const secret = getIncomingApiSecret();
-
-  if (!secret) {
-    return false;
-  }
-
-  return (
-    authorizationHeader === secret || authorizationHeader === `Bearer ${secret}`
-  );
-};
-
 export const POST = async (request: Request) => {
-  if (!isAuthorized(request.headers.get("authorization"))) {
+  if (!isAuthorizedIncomingRequest(request.headers.get("authorization"))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

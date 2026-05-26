@@ -8,6 +8,17 @@ export const getThumbnailPath = () =>
   process.env.THUMBNAIL_PATH?.trim() ||
   path.join(process.cwd(), "data", "thumbnails");
 
+export const getYoutubeDownloadPath = () =>
+  process.env.YOUTUBE_DOWNLOAD_PATH?.trim() ||
+  path.join(process.cwd(), "data", "youtube", "downloads");
+
+export const getYoutubeThumbnailPath = () =>
+  process.env.YOUTUBE_THUMBNAIL_PATH?.trim() ||
+  path.join(process.cwd(), "data", "youtube", "thumbnails");
+
+export const getYtdlpBinary = () =>
+  `${process.env.YT_DLP_BINARY_PATH?.trim() || path.join(process.cwd(), "binaries")}/${process.env.YT_DLP_BINARY?.trim() || "yt-dlp_linux"}`;
+
 export const getIncomingApiSecret = () =>
   process.env.LATEX_INCOMING_API_SECRET_KEY?.trim() ?? "";
 

@@ -18,6 +18,8 @@ import {
 import { DownloadError, downloadSourceFile } from "@/lib/preview/download";
 import { UnsupportedMediaTypeError } from "@/lib/preview/generatorRegistry";
 import { generateThumbnail } from "@/lib/preview/generateThumbnail";
+import { writeJpegThumbnail } from "@/lib/preview/output";
+import { getYoutubeVideo } from "@/lib/youtube/repository";
 
 const getErrorMessage = (error: unknown) => formatError(error);
 
@@ -69,6 +71,28 @@ const reportFailureToLatex = async (mediaId: string, reason: string) => {
   }
 };
 
+const generateCachedYoutubeThumbnail = async (
+  mediaId: string,
+  youtubeId: string,
+) => {
+  const video = await getYoutubeVideo(youtubeId);
+
+  if (!video?.thumbnailPath) {
+    return null;
+  }
+
+  const startedAt = performance.now();
+  const thumbnailPath = await writeJpegThumbnail({
+    mediaId,
+    input: video.thumbnailPath,
+  });
+
+  return {
+    thumbnailPath,
+    generationDurationMs: Math.round(performance.now() - startedAt),
+  };
+};
+
 const handleRetryableError = async (mediaId: string, error: unknown) => {
   const reason = getErrorMessage(error);
   const job = await incrementAttempts(mediaId, reason);
@@ -96,6 +120,42 @@ export const processGenerationJob = async (mediaId: string): Promise<void> => {
   }
 
   try {
+    if (job.youtubeId) {
+      const cachedThumbnail = await runJobStep(
+        "using cached YouTube thumbnail",
+        () => generateCachedYoutubeThumbnail(mediaId, job.youtubeId ?? ""),
+      );
+
+      if (cachedThumbnail) {
+        await runJobStep("reporting started status to Latex", () =>
+          reportLatexStatus(mediaId, "started"),
+        );
+        await updateJobStatus(mediaId, "started", { startedAt: new Date() });
+        await updateJobStatus(mediaId, "created", {
+          thumbnailPath: cachedThumbnail.thumbnailPath,
+          generationDurationMs: cachedThumbnail.generationDurationMs,
+          createdThumbnailAt: new Date(),
+        });
+        await updateJobStatus(mediaId, "uploading");
+        const thumbnailBase64 = await runJobStep(
+          "reading generated thumbnail",
+          () => readFile(cachedThumbnail.thumbnailPath, "base64"),
+        );
+
+        await runJobStep("uploading thumbnail to Latex", () =>
+          uploadLatexThumbnail({
+            mediaId,
+            thumbnailBase64,
+            generationDurationMs: cachedThumbnail.generationDurationMs,
+          }),
+        );
+        await updateJobStatus(mediaId, "complete", {
+          completedAt: new Date(),
+        });
+        return;
+      }
+    }
+
     await updateJobStatus(mediaId, "downloading");
     const downloadedPath = await runJobStep("downloading source file", () =>
       downloadSourceFile({

@@ -7,6 +7,7 @@ export const thumbnailJobPayloadSchema = z
     contentType: z.string().min(1),
     mimeType: z.string().min(1),
     fileSizeBytes: z.number().int().nonnegative(),
+    youtubeId: z.string().min(1).optional(),
     metadata: z.record(z.string(), z.unknown()).optional(),
   })
   .passthrough();

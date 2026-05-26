@@ -33,6 +33,7 @@ export const createOrResetPendingJob = async (payload: ThumbnailJobPayload) => {
     sourceUrl: payload.downloadUrl,
     contentType: payload.contentType,
     mimeType: payload.mimeType,
+    youtubeId: payload.youtubeId ?? null,
     fileSizeBytes: payload.fileSizeBytes,
     sourceMetadata: payload.metadata ?? payload,
   };

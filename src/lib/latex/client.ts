@@ -2,6 +2,7 @@ import { formatError } from "@/lib/errors";
 import { getLatexApiBaseUrl, getOutgoingApiSecret } from "@/lib/env";
 
 type LatexStatus = "started" | `error: ${string}`;
+type YoutubeIngestStatus = "downloading" | "uploading" | "complete" | "error";
 
 export class LatexApiError extends Error {
   statusCode: number;
@@ -26,7 +27,10 @@ const getLatexEndpoint = (mediaId: string, action: "status" | "thumbnail") => {
     : `${baseUrl}/api/thumbnails/${encodedMediaId}`;
 };
 
-const requestLatex = async (url: string, body: Record<string, unknown>) => {
+const requestLatex = async (
+  url: string,
+  body: Record<string, unknown>,
+): Promise<Response> => {
   let response: Response;
 
   try {
@@ -37,6 +41,77 @@ const requestLatex = async (url: string, body: Record<string, unknown>) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(body),
+    });
+  } catch (error) {
+    throw new Error(
+      `Latex API request to ${url} failed: ${formatError(error)}`,
+    );
+  }
+
+  if (!response.ok) {
+    const responseText = await response.text().catch(() => "");
+    const message =
+      responseText || `Latex API returned HTTP ${response.status}`;
+    throw new LatexApiError(message, response.status);
+  }
+
+  return response;
+};
+
+export const requestLatexJson = async <ResponseBody>(
+  path: string,
+  body: Record<string, unknown>,
+) => {
+  const baseUrl = getLatexApiBaseUrl();
+
+  if (!baseUrl) {
+    throw new Error("LATEX_API_BASE_URL is not set.");
+  }
+
+  const response = await requestLatex(`${baseUrl}${path}`, body);
+  return (await response.json()) as ResponseBody;
+};
+
+export const postLatexJson = async (
+  path: string,
+  body: Record<string, unknown>,
+) => {
+  const baseUrl = getLatexApiBaseUrl();
+
+  if (!baseUrl) {
+    throw new Error("LATEX_API_BASE_URL is not set.");
+  }
+
+  await requestLatex(`${baseUrl}${path}`, body);
+};
+
+export const postLatexBinary = async ({
+  path,
+  body,
+  headers,
+}: {
+  path: string;
+  body: Buffer;
+  headers: Record<string, string>;
+}) => {
+  const baseUrl = getLatexApiBaseUrl();
+
+  if (!baseUrl) {
+    throw new Error("LATEX_API_BASE_URL is not set.");
+  }
+
+  const url = `${baseUrl}${path}`;
+  let response: Response;
+
+  try {
+    response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: getOutgoingApiSecret(),
+        "Content-Type": "application/octet-stream",
+        ...headers,
+      },
+      body: body as unknown as BodyInit,
     });
   } catch (error) {
     throw new Error(
@@ -79,4 +154,25 @@ export const uploadLatexThumbnail = async ({
     contentType: "image/jpeg",
     generationDurationMs,
   });
+};
+
+export const reportYoutubeIngestStatus = async ({
+  ingestId,
+  status,
+  progress,
+  error,
+}: {
+  ingestId: string;
+  status: YoutubeIngestStatus;
+  progress: number;
+  error?: string;
+}) => {
+  await postLatexJson(
+    `/api/youtube/ingests/${encodeURIComponent(ingestId)}/status`,
+    {
+      status,
+      progress,
+      ...(error ? { error } : {}),
+    },
+  );
 };

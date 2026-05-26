@@ -32,6 +32,7 @@ install_system_dependencies() {
     run_as_root apt-get update
     run_as_root apt-get install -y --no-install-recommends \
       ffmpeg \
+      pipx \
       poppler-utils \
       libreoffice \
       fonts-dejavu \
@@ -43,6 +44,7 @@ install_system_dependencies() {
     log "Installing system packages with dnf"
     run_as_root dnf install -y \
       ffmpeg \
+      pipx \
       poppler-utils \
       libreoffice \
       dejavu-sans-fonts \
@@ -54,6 +56,7 @@ install_system_dependencies() {
     log "Installing system packages with yum"
     run_as_root yum install -y \
       ffmpeg \
+      python3-pip \
       poppler-utils \
       libreoffice \
       dejavu-sans-fonts \
@@ -65,6 +68,7 @@ install_system_dependencies() {
     log "Installing system packages with pacman"
     run_as_root pacman -Sy --needed --noconfirm \
       ffmpeg \
+      python-pipx \
       poppler \
       libreoffice-fresh \
       ttf-dejavu \
@@ -74,11 +78,11 @@ install_system_dependencies() {
 
   if command -v brew >/dev/null 2>&1; then
     log "Installing system packages with Homebrew"
-    brew install ffmpeg poppler libreoffice fontconfig
+    brew install ffmpeg pipx poppler libreoffice fontconfig
     return
   fi
 
-  warn "No supported package manager found. Install these manually: ffmpeg, poppler-utils/pdftoppm, libreoffice/soffice, fontconfig."
+  warn "No supported package manager found. Install these manually: ffmpeg, pipx, poppler-utils/pdftoppm, libreoffice/soffice, fontconfig."
 }
 
 install_node_dependencies() {
@@ -114,11 +118,13 @@ verify_command() {
 verify_dependencies() {
   log "Verifying preview generation binaries"
   verify_command ffmpeg "ffmpeg"
+  verify_command yt-dlp "yt-dlp"
   verify_command pdftoppm "poppler-utils"
   verify_command soffice "libreoffice"
 }
 
 install_system_dependencies
+install_ytdlp
 install_node_dependencies
 verify_dependencies
 
