@@ -1,6 +1,8 @@
 import { open, stat } from "node:fs/promises";
 import path from "node:path";
 
+import { uploadPart as uploadBlobPart } from "@vercel/blob/client";
+
 import { postLatexBinary, requestLatexJson } from "@/lib/latex/client";
 
 const defaultChunkSize = 8 * 1024 * 1024;
@@ -9,6 +11,13 @@ type InitUploadResponse = {
   sessionId: string;
   chunkSize: number;
   totalParts: number;
+  uploadedParts: Record<string, string>;
+  storageKey?: string;
+  multipart?: {
+    token: string;
+    key: string;
+    uploadId: string;
+  };
 };
 
 type CompleteUploadResponse = {
@@ -29,6 +38,28 @@ const sanitizeFileName = (title: string, extension: string) => {
     .slice(0, 180);
 
   return `${safeTitle || "YouTube video"}${extension}`;
+};
+
+const ackUploadedPart = async ({
+  userId,
+  sessionId,
+  partNumber,
+  etag,
+}: {
+  userId: string;
+  sessionId: string;
+  partNumber: number;
+  etag: string;
+}) => {
+  await requestLatexJson<{ etag: string; partNumber: number }>(
+    "/api/uploads/part",
+    {
+      userId,
+      sessionId,
+      partNumber,
+      etag,
+    },
+  );
 };
 
 export const uploadYoutubeVideoToLatex = async ({
@@ -68,19 +99,55 @@ export const uploadYoutubeVideoToLatex = async ({
 
   try {
     for (let partNumber = 1; partNumber <= totalParts; partNumber += 1) {
+      if (initResponse.uploadedParts?.[String(partNumber)]) {
+        await onProgress(
+          Math.min(99, Math.round((partNumber / totalParts) * 100)),
+        );
+        continue;
+      }
+
       const offset = (partNumber - 1) * chunkSize;
       const length = Math.min(chunkSize, fileSize - offset);
       const buffer = Buffer.alloc(length);
       await file.read(buffer, 0, length, offset);
-      await postLatexBinary({
-        path: "/api/uploads/part",
-        body: buffer,
-        headers: {
-          "x-upload-user-id": userId,
-          "x-upload-session-id": initResponse.sessionId,
-          "x-upload-part-number": String(partNumber),
-        },
-      });
+
+      if (initResponse.multipart) {
+        if (!initResponse.storageKey) {
+          throw new Error(
+            "Latex upload init returned multipart metadata without a storage key.",
+          );
+        }
+
+        const uploadedPart = await uploadBlobPart(
+          initResponse.storageKey,
+          buffer,
+          {
+            access: "private",
+            token: initResponse.multipart.token,
+            key: initResponse.multipart.key,
+            uploadId: initResponse.multipart.uploadId,
+            partNumber,
+            contentType: mimeType,
+          },
+        );
+
+        await ackUploadedPart({
+          userId,
+          sessionId: initResponse.sessionId,
+          partNumber,
+          etag: uploadedPart.etag,
+        });
+      } else {
+        await postLatexBinary({
+          path: "/api/uploads/part",
+          body: buffer,
+          headers: {
+            "x-upload-user-id": userId,
+            "x-upload-session-id": initResponse.sessionId,
+            "x-upload-part-number": String(partNumber),
+          },
+        });
+      }
 
       await onProgress(
         Math.min(99, Math.round((partNumber / totalParts) * 100)),
