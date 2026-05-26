@@ -17,7 +17,7 @@ export const getYoutubeThumbnailPath = () =>
   path.join(process.cwd(), "data", "youtube", "thumbnails");
 
 export const getYtdlpBinaryName = () =>
-  process.env.YT_DLP_BINARY?.trim() || "yt-dlp_linux";
+  process.env.YT_DLP_BINARY?.trim() || "yt-dlp-wrapper.sh";
 
 export const getYtdlpBinaryDirectory = () =>
   process.env.YT_DLP_BINARY_PATH?.trim() ||
@@ -25,16 +25,6 @@ export const getYtdlpBinaryDirectory = () =>
 
 export const getYtdlpBinary = () =>
   path.resolve(getYtdlpBinaryDirectory(), getYtdlpBinaryName());
-
-export const getYtdlpCookiesPath = () => {
-  const cookiesPath = process.env.YT_DLP_COOKIES_PATH?.trim() || "cookies.txt";
-  return path.isAbsolute(cookiesPath)
-    ? cookiesPath
-    : path.resolve(getYtdlpBinaryDirectory(), cookiesPath);
-};
-
-export const getYtdlpJsRuntime = () =>
-  process.env.YT_DLP_JS_RUNTIME?.trim() || "deno";
 
 export const getIncomingApiSecret = () =>
   process.env.LATEX_INCOMING_API_SECRET_KEY?.trim() ?? "";
