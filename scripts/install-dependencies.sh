@@ -32,6 +32,7 @@ install_system_dependencies() {
     run_as_root apt-get update
     run_as_root apt-get install -y --no-install-recommends \
       ffmpeg \
+      curl \
       pipx \
       poppler-utils \
       libreoffice \
@@ -44,6 +45,7 @@ install_system_dependencies() {
     log "Installing system packages with dnf"
     run_as_root dnf install -y \
       ffmpeg \
+      curl \
       pipx \
       poppler-utils \
       libreoffice \
@@ -56,6 +58,7 @@ install_system_dependencies() {
     log "Installing system packages with yum"
     run_as_root yum install -y \
       ffmpeg \
+      curl \
       python3-pip \
       poppler-utils \
       libreoffice \
@@ -68,6 +71,7 @@ install_system_dependencies() {
     log "Installing system packages with pacman"
     run_as_root pacman -Sy --needed --noconfirm \
       ffmpeg \
+      curl \
       python-pipx \
       poppler \
       libreoffice-fresh \
@@ -78,11 +82,22 @@ install_system_dependencies() {
 
   if command -v brew >/dev/null 2>&1; then
     log "Installing system packages with Homebrew"
-    brew install ffmpeg pipx poppler libreoffice fontconfig
+    brew install ffmpeg curl pipx poppler libreoffice fontconfig
     return
   fi
 
-  warn "No supported package manager found. Install these manually: ffmpeg, pipx, poppler-utils/pdftoppm, libreoffice/soffice, fontconfig."
+  warn "No supported package manager found. Install these manually: ffmpeg, curl, poppler-utils/pdftoppm, libreoffice/soffice, fontconfig."
+}
+
+install_ytdlp() {
+  local binary_dir="${YT_DLP_BINARY_PATH:-${ROOT_DIR}/binaries}"
+  local binary_name="${YT_DLP_BINARY:-yt-dlp_linux}"
+  local download_url="https://github.com/yt-dlp/yt-dlp/releases/latest/download/${binary_name}"
+
+  log "Installing latest ${binary_name}"
+  mkdir -p "${binary_dir}"
+  curl -fsSL "${download_url}" -o "${binary_dir}/${binary_name}"
+  chmod +x "${binary_dir}/${binary_name}"
 }
 
 install_node_dependencies() {
@@ -118,7 +133,7 @@ verify_command() {
 verify_dependencies() {
   log "Verifying preview generation binaries"
   verify_command ffmpeg "ffmpeg"
-  verify_command yt-dlp "yt-dlp"
+  "${YT_DLP_BINARY_PATH:-${ROOT_DIR}/binaries}/${YT_DLP_BINARY:-yt-dlp_linux}" --version
   verify_command pdftoppm "poppler-utils"
   verify_command soffice "libreoffice"
 }

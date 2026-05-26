@@ -126,3 +126,25 @@ export type YoutubeVideo = typeof youtubeVideos.$inferSelect;
 export type NewYoutubeVideo = typeof youtubeVideos.$inferInsert;
 export type YoutubeIngestJob = typeof youtubeIngestJobs.$inferSelect;
 export type NewYoutubeIngestJob = typeof youtubeIngestJobs.$inferInsert;
+
+export const ytdlpUpdateChecks = pgTable("ytdlp_update_checks", {
+  binaryName: text("binary_name").primaryKey(),
+  binaryPath: text("binary_path").notNull(),
+  localVersion: text("local_version"),
+  latestVersion: text("latest_version"),
+  releaseUrl: text("release_url"),
+  assetUrl: text("asset_url"),
+  lastCheckedAt: timestamp("last_checked_at", { withTimezone: true }),
+  lastUpdatedAt: timestamp("last_updated_at", { withTimezone: true }),
+  lastError: text("last_error"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});
+
+export type YtdlpUpdateCheck = typeof ytdlpUpdateChecks.$inferSelect;
+export type NewYtdlpUpdateCheck = typeof ytdlpUpdateChecks.$inferInsert;

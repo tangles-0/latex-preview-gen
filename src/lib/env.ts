@@ -16,8 +16,15 @@ export const getYoutubeThumbnailPath = () =>
   process.env.YOUTUBE_THUMBNAIL_PATH?.trim() ||
   path.join(process.cwd(), "data", "youtube", "thumbnails");
 
+export const getYtdlpBinaryName = () =>
+  process.env.YT_DLP_BINARY?.trim() || "yt-dlp_linux";
+
+export const getYtdlpBinaryDirectory = () =>
+  process.env.YT_DLP_BINARY_PATH?.trim() ||
+  path.join(process.cwd(), "binaries");
+
 export const getYtdlpBinary = () =>
-  `${process.env.YT_DLP_BINARY_PATH?.trim() || path.join(process.cwd(), "binaries")}/${process.env.YT_DLP_BINARY?.trim() || "yt-dlp_linux"}`;
+  path.resolve(getYtdlpBinaryDirectory(), getYtdlpBinaryName());
 
 export const getIncomingApiSecret = () =>
   process.env.LATEX_INCOMING_API_SECRET_KEY?.trim() ?? "";

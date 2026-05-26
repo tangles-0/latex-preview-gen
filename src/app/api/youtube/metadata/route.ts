@@ -5,6 +5,7 @@ import { isAuthorizedIncomingRequest } from "@/lib/auth";
 import { fetchYoutubeMetadata } from "@/lib/youtube/metadata";
 import { upsertYoutubeVideo } from "@/lib/youtube/repository";
 import { youtubeMetadataRequestSchema } from "@/lib/youtube/types";
+import { ensureYtdlpBinaryCurrent } from "@/lib/youtube/ytdlpUpdate";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,6 +17,7 @@ export const POST = async (request: Request) => {
 
   try {
     const payload = youtubeMetadataRequestSchema.parse(await request.json());
+    await ensureYtdlpBinaryCurrent();
     const metadata = await fetchYoutubeMetadata(payload.url);
     await upsertYoutubeVideo(metadata);
 
