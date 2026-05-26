@@ -2,13 +2,10 @@ import { spawn } from "node:child_process";
 import { readdir, stat } from "node:fs/promises";
 import path from "node:path";
 
-import {
-  getYoutubeDownloadPath,
-  getYtdlpBinary,
-  getYtdlpCookiesPath,
-} from "@/lib/env";
+import { getYoutubeDownloadPath, getYtdlpBinary } from "@/lib/env";
 import { formatError } from "@/lib/errors";
 import { getYoutubeDownloadOutputTemplate } from "@/lib/youtube/paths";
+import { getYtdlpBaseArgs } from "@/lib/youtube/ytdlpArgs";
 
 const parseProgress = (line: string) => {
   const match = line.match(/download:\s*(\d+(?:\.\d+)?)%/);
@@ -82,8 +79,7 @@ export const downloadYoutubeVideo = async ({
       .then((outputTemplate) => {
         const binary = getYtdlpBinary();
         const args = [
-          "--cookies",
-          getYtdlpCookiesPath(),
+          ...getYtdlpBaseArgs(),
           "--no-playlist",
           "--newline",
           "--progress-template",
@@ -107,6 +103,12 @@ export const downloadYoutubeVideo = async ({
 
         child.stdout.on("data", (chunk: unknown) => {
           const text = bufferFromChunk(chunk).toString("utf8");
+          const trimmedOutput = text.trim();
+
+          if (trimmedOutput) {
+            console.info("[yt-dlp download stdout]", trimmedOutput);
+          }
+
           for (const line of text.split(/\r?\n/)) {
             const trimmed = line.trim();
 
@@ -128,6 +130,11 @@ export const downloadYoutubeVideo = async ({
         child.stderr.on("data", (chunk: unknown) => {
           const buffer = bufferFromChunk(chunk);
           stderr.push(buffer);
+          const text = buffer.toString("utf8").trim();
+
+          if (text) {
+            console.warn("[yt-dlp download stderr]", text);
+          }
         });
         child.on("error", reject);
         child.on("close", (code) => {

@@ -1,9 +1,10 @@
 import { spawn } from "node:child_process";
 import { writeFile } from "node:fs/promises";
 
-import { getYtdlpBinary, getYtdlpCookiesPath } from "@/lib/env";
+import { getYtdlpBinary } from "@/lib/env";
 import { formatError } from "@/lib/errors";
 import { getExtensionForFile } from "@/lib/preview/paths";
+import { getYtdlpBaseArgs } from "@/lib/youtube/ytdlpArgs";
 import { getYoutubeThumbnailFilePath } from "@/lib/youtube/paths";
 import type { YoutubeMetadata, YoutubeQuality } from "@/lib/youtube/types";
 
@@ -56,13 +57,7 @@ const runYtdlpJson = (url: string) =>
   new Promise<YtdlpMetadata>((resolve, reject) => {
     const child = spawn(
       getYtdlpBinary(),
-      [
-        "--cookies",
-        getYtdlpCookiesPath(),
-        "--dump-single-json",
-        "--no-playlist",
-        url,
-      ],
+      [...getYtdlpBaseArgs(), "--dump-single-json", "--no-playlist", url],
       {
         stdio: ["ignore", "pipe", "pipe"],
       },
@@ -70,12 +65,24 @@ const runYtdlpJson = (url: string) =>
     const stdout: Buffer[] = [];
     const stderr: Buffer[] = [];
 
-    child.stdout.on("data", (chunk: unknown) =>
-      stdout.push(bufferFromChunk(chunk)),
-    );
-    child.stderr.on("data", (chunk: unknown) =>
-      stderr.push(bufferFromChunk(chunk)),
-    );
+    child.stdout.on("data", (chunk: unknown) => {
+      const buffer = bufferFromChunk(chunk);
+      stdout.push(buffer);
+      const text = buffer.toString("utf8").trim();
+
+      if (text) {
+        console.info("[yt-dlp metadata stdout]", text);
+      }
+    });
+    child.stderr.on("data", (chunk: unknown) => {
+      const buffer = bufferFromChunk(chunk);
+      stderr.push(buffer);
+      const text = buffer.toString("utf8").trim();
+
+      if (text) {
+        console.warn("[yt-dlp metadata stderr]", text);
+      }
+    });
     child.on("error", reject);
     child.on("close", (code) => {
       if (code !== 0) {

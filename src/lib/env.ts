@@ -26,8 +26,15 @@ export const getYtdlpBinaryDirectory = () =>
 export const getYtdlpBinary = () =>
   path.resolve(getYtdlpBinaryDirectory(), getYtdlpBinaryName());
 
-export const getYtdlpCookiesPath = () =>
-  process.env.YT_DLP_COOKIES_PATH?.trim() || "cookies.txt";
+export const getYtdlpCookiesPath = () => {
+  const cookiesPath = process.env.YT_DLP_COOKIES_PATH?.trim() || "cookies.txt";
+  return path.isAbsolute(cookiesPath)
+    ? cookiesPath
+    : path.resolve(getYtdlpBinaryDirectory(), cookiesPath);
+};
+
+export const getYtdlpJsRuntime = () =>
+  process.env.YT_DLP_JS_RUNTIME?.trim() || "deno";
 
 export const getIncomingApiSecret = () =>
   process.env.LATEX_INCOMING_API_SECRET_KEY?.trim() ?? "";
