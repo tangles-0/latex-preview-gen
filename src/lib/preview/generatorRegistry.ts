@@ -1,5 +1,6 @@
 import { documentThumbnailGenerator } from "@/lib/preview/documentThumbnailGenerator";
 import { imageThumbnailGenerator } from "@/lib/preview/imageThumbnailGenerator";
+import { textThumbnailGenerator } from "@/lib/preview/textThumbnailGenerator";
 import { videoThumbnailGenerator } from "@/lib/preview/videoThumbnailGenerator";
 import type { ThumbnailGenerator } from "@/lib/preview/types";
 
@@ -7,6 +8,7 @@ const thumbnailGenerators: readonly ThumbnailGenerator[] = [
   imageThumbnailGenerator,
   videoThumbnailGenerator,
   documentThumbnailGenerator,
+  textThumbnailGenerator,
 ];
 
 const normalize = (value: string) => value.trim().toLowerCase();
@@ -25,6 +27,14 @@ export class UnsupportedMediaTypeError extends Error {
   }
 }
 
+const generatorSupportsMime = (
+  generator: ThumbnailGenerator,
+  mimeType: string,
+) => {
+  const supported = generator.supportedMimeTypes.map((value) => normalize(value));
+  return supported.includes("*") || supported.includes(mimeType);
+};
+
 export const getThumbnailGenerator = ({
   contentType,
   mimeType,
@@ -40,9 +50,7 @@ export const getThumbnailGenerator = ({
       generator.supportedContentTypes
         .map((supportedContentType) => normalize(supportedContentType))
         .includes(normalizedContentType) &&
-      generator.supportedMimeTypes
-        .map((supportedMimeType) => normalize(supportedMimeType))
-        .includes(normalizedMimeType),
+      generatorSupportsMime(generator, normalizedMimeType),
   );
 };
 
