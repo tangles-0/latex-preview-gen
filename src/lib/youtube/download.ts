@@ -6,6 +6,7 @@ import { getYoutubeDownloadPath, getYtdlpBinary } from "@/lib/env";
 import { formatError } from "@/lib/errors";
 import { getYoutubeDownloadOutputTemplate } from "@/lib/youtube/paths";
 import { getYtdlpBaseArgs } from "@/lib/youtube/ytdlpArgs";
+import type { YoutubeOutputType } from "@/lib/youtube/types";
 
 const parseProgress = (line: string) => {
   const match = line.match(/download:\s*(\d+(?:\.\d+)?)%/);
@@ -49,7 +50,14 @@ const findDownloadedFile = async (ingestId: string) => {
   )[0]?.filePath;
 };
 
-export const mimeTypeForVideoPath = (filePath: string) => {
+export const mimeTypeForYoutubeOutput = (
+  filePath: string,
+  outputType: YoutubeOutputType,
+) => {
+  if (outputType === "audio") {
+    return "audio/mpeg";
+  }
+
   const extension = path.extname(filePath).toLowerCase();
 
   if (extension === ".webm") {
@@ -63,21 +71,35 @@ export const mimeTypeForVideoPath = (filePath: string) => {
   return "video/mp4";
 };
 
-export const downloadYoutubeVideo = async ({
+export const downloadYoutubeMedia = async ({
   ingestId,
   url,
   qualityId,
+  outputType,
   onProgress,
 }: {
   ingestId: string;
   url: string;
-  qualityId: string;
+  qualityId?: string;
+  outputType: YoutubeOutputType;
   onProgress: (progress: number) => Promise<void>;
 }) =>
   new Promise<string>((resolve, reject) => {
     void getYoutubeDownloadOutputTemplate(ingestId)
       .then((outputTemplate) => {
         const binary = getYtdlpBinary();
+        const formatArgs =
+          outputType === "audio"
+            ? [
+                "-f",
+                "bestaudio/best",
+                "--extract-audio",
+                "--audio-format",
+                "mp3",
+                "--audio-quality",
+                "0",
+              ]
+            : ["-f", qualityId ?? "", "--merge-output-format", "mp4"];
         const args = [
           ...getYtdlpBaseArgs(),
           "--no-playlist",
@@ -86,10 +108,7 @@ export const downloadYoutubeVideo = async ({
           "download:%(progress._percent_str)s",
           "--print",
           "after_move:filepath",
-          "-f",
-          qualityId,
-          "--merge-output-format",
-          "mp4",
+          ...formatArgs,
           "-o",
           outputTemplate,
           url,

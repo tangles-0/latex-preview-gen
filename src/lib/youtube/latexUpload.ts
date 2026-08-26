@@ -4,6 +4,7 @@ import path from "node:path";
 import { uploadPart as uploadBlobPart } from "@vercel/blob/client";
 
 import { postLatexBinary, requestLatexJson } from "@/lib/latex/client";
+import type { YoutubeOutputType } from "@/lib/youtube/types";
 
 const defaultChunkSize = 8 * 1024 * 1024;
 
@@ -62,13 +63,14 @@ const ackUploadedPart = async ({
   );
 };
 
-export const uploadYoutubeVideoToLatex = async ({
+export const uploadYoutubeMediaToLatex = async ({
   ingestId,
   userId,
   youtubeId,
   title,
   filePath,
   mimeType,
+  outputType,
   onProgress,
 }: {
   ingestId: string;
@@ -77,6 +79,7 @@ export const uploadYoutubeVideoToLatex = async ({
   title: string;
   filePath: string;
   mimeType: string;
+  outputType: YoutubeOutputType;
   onProgress: (progress: number) => Promise<void>;
 }) => {
   const fileStats = await stat(filePath);
@@ -90,7 +93,7 @@ export const uploadYoutubeVideoToLatex = async ({
       fileSize,
       mimeType,
       chunkSize: defaultChunkSize,
-      targetType: "video",
+      targetType: outputType === "audio" ? "other" : "video",
     },
   );
   const chunkSize = initResponse.chunkSize || defaultChunkSize;
@@ -166,6 +169,7 @@ export const uploadYoutubeVideoToLatex = async ({
       youtubeIngestId: ingestId,
       youtubeId,
       title,
+      youtubeMediaType: outputType,
     },
   );
 

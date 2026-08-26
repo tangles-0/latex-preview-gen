@@ -7,7 +7,11 @@ import {
   youtubeVideos,
 } from "@/db/schema";
 import { db } from "@/db";
-import type { YoutubeIngestStatus, YoutubeMetadata } from "@/lib/youtube/types";
+import type {
+  YoutubeIngestStatus,
+  YoutubeMetadata,
+  YoutubeOutputType,
+} from "@/lib/youtube/types";
 
 const metadataString = (value: unknown) =>
   typeof value === "string" ? value : undefined;
@@ -57,13 +61,15 @@ export const createOrResetYoutubeIngest = async (input: {
   ingestId: string;
   userId: string;
   youtubeId: string;
-  qualityId: string;
+  qualityId?: string;
+  outputType: YoutubeOutputType;
 }) => {
   const values: NewYoutubeIngestJob = {
     ingestId: input.ingestId,
     userId: input.userId,
     youtubeId: input.youtubeId,
-    qualityId: input.qualityId,
+    qualityId: input.qualityId ?? "bestaudio",
+    outputType: input.outputType,
     status: "pending",
     progress: 0,
     error: null,

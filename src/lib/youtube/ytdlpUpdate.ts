@@ -8,9 +8,8 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { ytdlpUpdateChecks } from "@/db/schema";
 import {
-  getYtdlpBinary,
-  getYtdlpBinaryDirectory,
-  getYtdlpBinaryName,
+  getYtdlpReleaseBinary,
+  getYtdlpReleaseBinaryName,
 } from "@/lib/env";
 import { formatError } from "@/lib/errors";
 
@@ -153,9 +152,8 @@ const upsertCheck = async ({
 };
 
 export const ensureYtdlpBinaryCurrent = async () => {
-  const binaryName = getYtdlpBinaryName();
-  const binaryPath = getYtdlpBinary();
-  const binaryDirectory = path.resolve(getYtdlpBinaryDirectory());
+  const binaryName = getYtdlpReleaseBinaryName();
+  const binaryPath = getYtdlpReleaseBinary();
   const [existingCheck] = await db
     .select()
     .from(ytdlpUpdateChecks)
@@ -172,10 +170,6 @@ export const ensureYtdlpBinaryCurrent = async () => {
   let localVersion = await getLocalVersion(binaryPath);
 
   try {
-    if (path.dirname(binaryPath) !== binaryDirectory) {
-      throw new Error("YT_DLP_BINARY must be a binary name, not a path.");
-    }
-
     const release = await getLatestRelease();
     const latestVersion = normalizeVersion(release.tag_name);
     const asset = release.assets.find((item) => item.name === binaryName);

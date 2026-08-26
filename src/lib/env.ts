@@ -26,6 +26,16 @@ export const getYtdlpBinaryDirectory = () =>
 export const getYtdlpBinary = () =>
   path.resolve(getYtdlpBinaryDirectory(), getYtdlpBinaryName());
 
+export const getYtdlpReleaseBinary = () => {
+  const configuredPath = process.env.YT_DLP_REAL_BINARY?.trim();
+  return configuredPath
+    ? path.resolve(configuredPath)
+    : path.resolve(getYtdlpBinaryDirectory(), "yt-dlp_linux");
+};
+
+export const getYtdlpReleaseBinaryName = () =>
+  path.basename(getYtdlpReleaseBinary());
+
 export const getIncomingApiSecret = () =>
   process.env.LATEX_INCOMING_API_SECRET_KEY?.trim() ?? "";
 

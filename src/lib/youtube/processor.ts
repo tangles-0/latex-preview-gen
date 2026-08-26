@@ -1,14 +1,15 @@
 import { formatError } from "@/lib/errors";
 import { LatexApiError, reportYoutubeIngestStatus } from "@/lib/latex/client";
 import {
-  downloadYoutubeVideo,
-  mimeTypeForVideoPath,
+  downloadYoutubeMedia,
+  mimeTypeForYoutubeOutput,
 } from "@/lib/youtube/download";
-import { uploadYoutubeVideoToLatex } from "@/lib/youtube/latexUpload";
+import { uploadYoutubeMediaToLatex } from "@/lib/youtube/latexUpload";
 import {
   getYoutubeVideo,
   updateYoutubeIngestStatus,
 } from "@/lib/youtube/repository";
+import type { YoutubeOutputType } from "@/lib/youtube/types";
 
 const reportStatus = async ({
   ingestId,
@@ -54,11 +55,13 @@ export const processYoutubeIngest = async ({
   userId,
   youtubeId,
   qualityId,
+  outputType,
 }: {
   ingestId: string;
   userId: string;
   youtubeId: string;
-  qualityId: string;
+  qualityId?: string;
+  outputType: YoutubeOutputType;
 }) => {
   let progress = 0;
 
@@ -80,17 +83,18 @@ export const processYoutubeIngest = async ({
       return;
     }
 
-    const downloadedPath = await downloadYoutubeVideo({
+    const downloadedPath = await downloadYoutubeMedia({
       ingestId,
       url: video.sourceUrl,
       qualityId,
+      outputType,
       onProgress: async (nextProgress) => {
         progress = Math.max(progress, Math.min(99, nextProgress));
         await updateYoutubeIngestStatus(ingestId, "downloading", { progress });
         await reportStatus({ ingestId, status: "downloading", progress });
       },
     });
-    const mimeType = mimeTypeForVideoPath(downloadedPath);
+    const mimeType = mimeTypeForYoutubeOutput(downloadedPath, outputType);
 
     await updateYoutubeIngestStatus(ingestId, "uploading", {
       progress: 0,
@@ -108,13 +112,14 @@ export const processYoutubeIngest = async ({
       return;
     }
 
-    const uploadResult = await uploadYoutubeVideoToLatex({
+    const uploadResult = await uploadYoutubeMediaToLatex({
       ingestId,
       userId,
       youtubeId,
       title: video.title,
       filePath: downloadedPath,
       mimeType,
+      outputType,
       onProgress: async (nextProgress) => {
         progress = Math.max(progress, Math.min(99, nextProgress));
         await updateYoutubeIngestStatus(ingestId, "uploading", { progress });

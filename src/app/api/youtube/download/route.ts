@@ -28,11 +28,12 @@ export const POST = async (request: Request) => {
       );
     }
 
-    const quality = video.qualities.find(
-      (item) => item.id === payload.qualityId,
-    );
+    const quality =
+      payload.outputType === "video"
+        ? video.qualities.find((item) => item.id === payload.qualityId)
+        : undefined;
 
-    if (!quality) {
+    if (payload.outputType === "video" && !quality) {
       return NextResponse.json(
         { error: "Could not start download" },
         { status: 400 },

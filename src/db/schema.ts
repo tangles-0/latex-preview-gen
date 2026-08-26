@@ -97,6 +97,7 @@ export const youtubeIngestJobs = pgTable(
       .notNull()
       .references(() => youtubeVideos.youtubeId),
     qualityId: text("quality_id").notNull(),
+    outputType: text("output_type").notNull().default("video"),
     status: text("status").notNull().default("pending"),
     progress: integer("progress").notNull().default(0),
     error: text("error"),
