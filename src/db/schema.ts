@@ -128,6 +128,38 @@ export type NewYoutubeVideo = typeof youtubeVideos.$inferInsert;
 export type YoutubeIngestJob = typeof youtubeIngestJobs.$inferSelect;
 export type NewYoutubeIngestJob = typeof youtubeIngestJobs.$inferInsert;
 
+export const imageGenerationJobs = pgTable(
+  "image_generation_jobs",
+  {
+    generationId: text("generation_id").primaryKey(),
+    userId: text("user_id").notNull(),
+    prompt: text("prompt").notNull(),
+    negativePrompt: text("negative_prompt"),
+    status: text("status").notNull().default("pending"),
+    failureReason: text("failure_reason"),
+    outputPath: text("output_path"),
+    uploadedMediaId: text("uploaded_media_id"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+    startedAt: timestamp("started_at", { withTimezone: true }),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+  },
+  table => ({
+    statusIdx: index("image_generation_jobs_status_idx").on(table.status),
+    createdAtIdx: index("image_generation_jobs_created_at_idx").on(
+      table.createdAt,
+    ),
+  }),
+);
+
+export type ImageGenerationJob = typeof imageGenerationJobs.$inferSelect;
+export type NewImageGenerationJob = typeof imageGenerationJobs.$inferInsert;
+
 export const ytdlpUpdateChecks = pgTable("ytdlp_update_checks", {
   binaryName: text("binary_name").primaryKey(),
   binaryPath: text("binary_path").notNull(),

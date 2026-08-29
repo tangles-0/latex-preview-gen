@@ -4,5 +4,8 @@ export async function register() {
   }
 
   const { retryStartupJobs } = await import("@/lib/jobs/processor");
+  const { dispatchImageGenerationQueue } =
+    await import("@/lib/imageGeneration/processor");
   void retryStartupJobs();
+  void dispatchImageGenerationQueue();
 }

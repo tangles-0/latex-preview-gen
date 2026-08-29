@@ -16,6 +16,15 @@ export const getYoutubeThumbnailPath = () =>
   process.env.YOUTUBE_THUMBNAIL_PATH?.trim() ||
   path.join(process.cwd(), "data", "youtube", "thumbnails");
 
+export const getImageGenerationApiUrl = () =>
+  (
+    process.env.IMAGE_GENERATION_API_URL?.trim() || "http://ubuntu-server:7861"
+  ).replace(/\/$/, "");
+
+export const getImageGenerationPath = () =>
+  process.env.IMAGE_GENERATION_PATH?.trim() ||
+  path.join(process.cwd(), "data", "image-generations");
+
 export const getYtdlpBinaryName = () =>
   process.env.YT_DLP_BINARY?.trim() || "yt-dlp-wrapper.sh";
 

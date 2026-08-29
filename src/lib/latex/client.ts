@@ -3,6 +3,7 @@ import { getLatexApiBaseUrl, getOutgoingApiSecret } from "@/lib/env";
 
 type LatexStatus = "started" | `error: ${string}`;
 type YoutubeIngestStatus = "downloading" | "uploading" | "complete" | "error";
+type ImageGenerationStatus = "generating" | "uploading" | "complete" | "failed";
 
 export class LatexApiError extends Error {
   statusCode: number;
@@ -172,6 +173,24 @@ export const reportYoutubeIngestStatus = async ({
     {
       status,
       progress,
+      ...(error ? { error } : {}),
+    },
+  );
+};
+
+export const reportImageGenerationStatus = async ({
+  generationId,
+  status,
+  error,
+}: {
+  generationId: string;
+  status: ImageGenerationStatus;
+  error?: string;
+}) => {
+  await postLatexJson(
+    `/api/image-generations/${encodeURIComponent(generationId)}/status`,
+    {
+      status,
       ...(error ? { error } : {}),
     },
   );
