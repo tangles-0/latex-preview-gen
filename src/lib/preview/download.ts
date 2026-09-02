@@ -1,5 +1,5 @@
 import { createWriteStream } from "node:fs";
-import { mkdir } from "node:fs/promises";
+import { mkdir, rm } from "node:fs/promises";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import type { ReadableStream as NodeReadableStream } from "node:stream/web";
@@ -62,10 +62,15 @@ export const downloadSourceFile = async ({
     safeMediaFileName(mediaId, extension),
   );
 
-  await pipeline(
-    Readable.fromWeb(response.body as NodeReadableStream<Uint8Array>),
-    createWriteStream(filePath),
-  );
+  try {
+    await pipeline(
+      Readable.fromWeb(response.body as NodeReadableStream<Uint8Array>),
+      createWriteStream(filePath),
+    );
+  } catch (error) {
+    await rm(filePath, { force: true }).catch(() => {});
+    throw error;
+  }
 
   return filePath;
 };

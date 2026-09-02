@@ -1,5 +1,7 @@
 import path from "node:path";
 
+import { parsePreviewConcurrency } from "@/lib/jobs/queuePolicy";
+
 export const getDownloadPath = () =>
   process.env.DOWNLOAD_PATH?.trim() ||
   path.join(process.cwd(), "data", "downloads");
@@ -7,6 +9,12 @@ export const getDownloadPath = () =>
 export const getThumbnailPath = () =>
   process.env.THUMBNAIL_PATH?.trim() ||
   path.join(process.cwd(), "data", "thumbnails");
+
+export const getNodeLibraryPath = () =>
+  process.env.NODE_LIBRARY_PATH?.trim() || null;
+
+export const getPreviewConcurrency = () =>
+  parsePreviewConcurrency(process.env.PREVIEW_CONCURRENCY);
 
 export const getYoutubeDownloadPath = () =>
   process.env.YOUTUBE_DOWNLOAD_PATH?.trim() ||
@@ -24,6 +32,9 @@ export const getImageGenerationApiUrl = () =>
 export const getImageGenerationPath = () =>
   process.env.IMAGE_GENERATION_PATH?.trim() ||
   path.join(process.cwd(), "data", "image-generations");
+
+export const isImageGenerationEnabled = () =>
+  process.env.IMAGE_GENERATION_ENABLED !== "false";
 
 export const getYtdlpBinaryName = () =>
   process.env.YT_DLP_BINARY?.trim() || "yt-dlp-wrapper.sh";

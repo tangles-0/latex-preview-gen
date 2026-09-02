@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { isAuthorizedIncomingRequest } from "@/lib/auth";
+import { isImageGenerationEnabled } from "@/lib/env";
 import { imageGenerationMaxAgeMs } from "@/lib/imageGeneration/policy";
 import {
   expireImageGenerationJob,
@@ -14,6 +15,9 @@ export const GET = async (
   request: Request,
   { params }: { params: Promise<{ generationId: string }> },
 ) => {
+  if (!isImageGenerationEnabled()) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
   if (!isAuthorizedIncomingRequest(request.headers.get("authorization"))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

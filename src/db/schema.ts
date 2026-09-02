@@ -16,7 +16,8 @@ export const thumbnailGenerationJobs = pgTable(
     attempts: integer("attempts").notNull().default(0),
     failureReason: text("failure_reason"),
     lastError: text("last_error"),
-    sourceUrl: text("source_url").notNull(),
+    sourceUrl: text("source_url"),
+    localSourcePath: text("local_source_path"),
     contentType: text("content_type").notNull(),
     mimeType: text("mime_type").notNull().default("application/octet-stream"),
     youtubeId: text("youtube_id"),
@@ -38,9 +39,18 @@ export const thumbnailGenerationJobs = pgTable(
       withTimezone: true,
     }),
     completedAt: timestamp("completed_at", { withTimezone: true }),
+    nextAttemptAt: timestamp("next_attempt_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    claimToken: text("claim_token"),
+    leaseExpiresAt: timestamp("lease_expires_at", { withTimezone: true }),
   },
   (table) => ({
     statusIdx: index("thumbnail_generation_jobs_status_idx").on(table.status),
+    queueIdx: index("thumbnail_generation_jobs_queue_idx").on(
+      table.status,
+      table.nextAttemptAt,
+    ),
     createdAtIdx: index("thumbnail_generation_jobs_created_at_idx").on(
       table.createdAt,
     ),
@@ -149,7 +159,7 @@ export const imageGenerationJobs = pgTable(
     startedAt: timestamp("started_at", { withTimezone: true }),
     completedAt: timestamp("completed_at", { withTimezone: true }),
   },
-  table => ({
+  (table) => ({
     statusIdx: index("image_generation_jobs_status_idx").on(table.status),
     createdAtIdx: index("image_generation_jobs_created_at_idx").on(
       table.createdAt,

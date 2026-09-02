@@ -13,7 +13,7 @@ description: >-
 - Tailwind CSS for diagnostics
 - PostgreSQL with Drizzle ORM
 - Shared-secret authentication for Latex-to-worker calls
-- pnpm; self-hosted under PM2
+- pnpm; self-hosted under PM2 or the production Docker image
 
 ## Layout and conventions
 
@@ -23,6 +23,7 @@ description: >-
 - Validate every API boundary with Zod.
 - Keep external binaries and LAN services behind focused `src/lib/` modules.
 - Keep queue state durable in PostgreSQL and serialize non-concurrent services.
+- Thumbnail work uses leased PostgreSQL claims and `PREVIEW_CONCURRENCY`; local source paths must remain under `NODE_LIBRARY_PATH`.
 - Add environment variables to `.env.example`; never commit secrets.
 - Apply schema changes with `pnpm db:push`.
 

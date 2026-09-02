@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
 import { isAuthorizedIncomingRequest } from "@/lib/auth";
+import { isImageGenerationEnabled } from "@/lib/env";
 import { dispatchImageGenerationQueue } from "@/lib/imageGeneration/processor";
 import {
   createImageGenerationJob,
@@ -13,6 +14,9 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export const POST = async (request: Request) => {
+  if (!isImageGenerationEnabled()) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
   if (!isAuthorizedIncomingRequest(request.headers.get("authorization"))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

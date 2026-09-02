@@ -2,6 +2,7 @@ Dockerfile
 .dockerignore
 node_modules
 npm-debug.log
+*.log
 README.md
 .env
 .env.local
@@ -9,10 +10,15 @@ README.md
 .env.development.local
 .git
 .gitignore
+.agent
+.cursor
+.next-docs
 .next
 .vercel
 coverage
 .nyc_output
+playwright-report
+test-results
 
 data
 docs

@@ -2,8 +2,12 @@ import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
 import { isAuthorizedIncomingRequest } from "@/lib/auth";
+import {
+  LocalSourcePathError,
+  resolveLocalSourcePath,
+} from "@/lib/jobs/localPaths";
 import { createOrResetPendingJob } from "@/lib/jobs/repository";
-import { processGenerationJob } from "@/lib/jobs/processor";
+import { dispatchThumbnailQueue } from "@/lib/jobs/processor";
 import { thumbnailJobPayloadSchema } from "@/lib/jobs/types";
 import {
   getSupportedThumbnailTypes,
@@ -19,7 +23,15 @@ export const POST = async (request: Request) => {
   }
 
   try {
-    const payload = thumbnailJobPayloadSchema.parse(await request.json());
+    const parsedPayload = thumbnailJobPayloadSchema.parse(await request.json());
+    const payload = parsedPayload.localSourcePath
+      ? {
+          ...parsedPayload,
+          localSourcePath: await resolveLocalSourcePath(
+            parsedPayload.localSourcePath,
+          ),
+        }
+      : parsedPayload;
 
     if (!getThumbnailGenerator(payload)) {
       console.error("Unsupported media type", payload);
@@ -37,7 +49,7 @@ export const POST = async (request: Request) => {
     const { job, shouldProcess } = await createOrResetPendingJob(payload);
 
     if (shouldProcess) {
-      void processGenerationJob(job.mediaId);
+      void dispatchThumbnailQueue();
     }
 
     return NextResponse.json(
@@ -49,9 +61,14 @@ export const POST = async (request: Request) => {
       { status: shouldProcess ? 202 : 200 },
     );
   } catch (error) {
-    if (error instanceof ZodError) {
+    if (error instanceof ZodError || error instanceof LocalSourcePathError) {
       return NextResponse.json(
-        { error: "Invalid payload", issues: error.issues },
+        {
+          error: "Invalid payload",
+          ...(error instanceof ZodError
+            ? { issues: error.issues }
+            : { issues: [{ message: error.message }] }),
+        },
         { status: 400 },
       );
     }

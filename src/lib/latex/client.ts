@@ -157,6 +157,23 @@ export const uploadLatexThumbnail = async ({
   });
 };
 
+export const uploadLatexThumbnailPath = async ({
+  mediaId,
+  thumbnailPath,
+  generationDurationMs,
+}: {
+  mediaId: string;
+  thumbnailPath: string;
+  generationDurationMs: number;
+}) => {
+  await requestLatex(getLatexEndpoint(mediaId, "thumbnail"), {
+    mediaId,
+    thumbnailPath,
+    contentType: "image/jpeg",
+    generationDurationMs,
+  });
+};
+
 export const reportYoutubeIngestStatus = async ({
   ingestId,
   status,

@@ -3,9 +3,12 @@ export async function register() {
     return;
   }
 
-  const { retryStartupJobs } = await import("@/lib/jobs/processor");
-  const { dispatchImageGenerationQueue } =
-    await import("@/lib/imageGeneration/processor");
-  void retryStartupJobs();
-  void dispatchImageGenerationQueue();
+  const { isImageGenerationEnabled } = await import("@/lib/env");
+  const { startThumbnailQueue } = await import("@/lib/jobs/processor");
+  void startThumbnailQueue();
+  if (isImageGenerationEnabled()) {
+    const { dispatchImageGenerationQueue } =
+      await import("@/lib/imageGeneration/processor");
+    void dispatchImageGenerationQueue();
+  }
 }

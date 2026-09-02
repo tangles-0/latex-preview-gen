@@ -1,4 +1,4 @@
-import { mkdir } from "node:fs/promises";
+import { mkdir, rm } from "node:fs/promises";
 import path from "node:path";
 
 import sharp from "sharp";
@@ -20,11 +20,16 @@ export const writeJpegThumbnail = async ({
   );
 
   await mkdir(thumbnailDirectory, { recursive: true });
-  await sharp(input, { animated: false })
-    .rotate()
-    .resize({ width: 1024, withoutEnlargement: true })
-    .jpeg({ quality: 82, mozjpeg: true })
-    .toFile(thumbnailPath);
+  try {
+    await sharp(input, { animated: false })
+      .rotate()
+      .resize({ width: 1024, withoutEnlargement: true })
+      .jpeg({ quality: 82, mozjpeg: true })
+      .toFile(thumbnailPath);
+  } catch (error) {
+    await rm(thumbnailPath, { force: true }).catch(() => {});
+    throw error;
+  }
 
   return thumbnailPath;
 };
