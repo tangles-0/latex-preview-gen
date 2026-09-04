@@ -5,6 +5,7 @@ import { sql } from "drizzle-orm";
 import { db } from "@/db";
 import { formatError } from "@/lib/errors";
 import { generateImage } from "@/lib/imageGeneration/generator";
+import { expandImagePrompt } from "@/lib/imageGeneration/expandPrompt";
 import { uploadGeneratedImageToLatex } from "@/lib/imageGeneration/latexUpload";
 import {
   getRemainingImageGenerationTimeMs,
@@ -131,11 +132,45 @@ const processJob = async (
       return;
     }
 
+    let promptForModel = job.expandedPrompt?.trim() || job.prompt;
+    if (job.expandPrompt && !job.expandedPrompt?.trim()) {
+      const expandTimeoutMs = Math.min(
+        15_000,
+        remainingMs - uploadGraceMs - 5_000,
+      );
+      if (expandTimeoutMs < 2_000) {
+        await failJob(
+          generationId,
+          "Not enough time remaining to expand the prompt.",
+        );
+        return;
+      }
+
+      promptForModel = await expandImagePrompt({
+        prompt: job.prompt,
+        timeoutMs: expandTimeoutMs,
+      });
+      await updateImageGenerationJob(generationId, "generating", {
+        expandedPrompt: promptForModel,
+      });
+    }
+
+    const remainingAfterExpandMs = getRemainingImageGenerationTimeMs(
+      job.createdAt,
+    );
+    if (remainingAfterExpandMs <= uploadGraceMs) {
+      await failJob(
+        generationId,
+        "Image generation exceeded the one-minute time limit.",
+      );
+      return;
+    }
+
     const outputPath = await generateImage({
       generationId,
-      prompt: job.prompt,
+      prompt: promptForModel,
       negativePrompt: job.negativePrompt,
-      timeoutMs: remainingMs - uploadGraceMs,
+      timeoutMs: remainingAfterExpandMs - uploadGraceMs,
     });
     const currentJob = await getImageGenerationJob(generationId);
 
@@ -173,6 +208,7 @@ const processJob = async (
       generationId,
       userId: job.userId,
       prompt: job.prompt,
+      generationPrompt: promptForModel,
       filePath: outputPath,
     });
 

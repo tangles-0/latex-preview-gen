@@ -1,5 +1,6 @@
 import {
   bigint,
+  boolean,
   index,
   integer,
   jsonb,
@@ -145,6 +146,8 @@ export const imageGenerationJobs = pgTable(
     userId: text("user_id").notNull(),
     prompt: text("prompt").notNull(),
     negativePrompt: text("negative_prompt"),
+    expandPrompt: boolean("expand_prompt").notNull().default(false),
+    expandedPrompt: text("expanded_prompt"),
     status: text("status").notNull().default("pending"),
     failureReason: text("failure_reason"),
     outputPath: text("output_path"),

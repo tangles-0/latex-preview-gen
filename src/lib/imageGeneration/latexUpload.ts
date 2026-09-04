@@ -4,11 +4,13 @@ export const uploadGeneratedImageToLatex = async ({
   generationId,
   userId,
   prompt,
+  generationPrompt,
   filePath,
 }: {
   generationId: string;
   userId: string;
   prompt: string;
+  generationPrompt: string;
   filePath: string;
 }) => {
   const safePrompt = prompt
@@ -25,6 +27,7 @@ export const uploadGeneratedImageToLatex = async ({
     targetType: "image",
     completePayload: {
       imageGenerationId: generationId,
+      generationPrompt,
     },
     onProgress: async () => {},
   });

@@ -23,6 +23,7 @@ export const createImageGenerationJob = async (
       userId: input.userId,
       prompt: input.prompt,
       negativePrompt: input.negativePrompt || null,
+      expandPrompt: input.expandPrompt,
       status: "pending",
     })
     .onConflictDoNothing()

@@ -36,6 +36,17 @@ export const getImageGenerationPath = () =>
 export const isImageGenerationEnabled = () =>
   process.env.IMAGE_GENERATION_ENABLED !== "false";
 
+export const getLiteLlmApiUrl = () =>
+  (process.env.LITE_LLM_API_URL?.trim() || "").replace(/\/$/, "");
+
+export const getLiteLlmApiKey = () =>
+  process.env.LITE_LLM_API_KEY?.trim() ?? "";
+
+export const getLiteLlmModel = () => process.env.LITE_LLM_MODEL?.trim() ?? "";
+
+export const isLiteLlmConfigured = () =>
+  Boolean(getLiteLlmApiUrl() && getLiteLlmModel());
+
 export const getYtdlpBinaryName = () =>
   process.env.YT_DLP_BINARY?.trim() || "yt-dlp-wrapper.sh";
 
